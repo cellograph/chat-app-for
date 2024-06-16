@@ -47,7 +47,22 @@ io.on("connection", (socket) => {
 			console.log(e);
 			return;
 		}
-		io.emit("message", msg);
+		io.emit("message", msg, message.lastInsertRowid.toString());
+
+		if (!socket.recovered) {
+			try {
+				const results = await db.execute({
+					sql: `SELECT id, content FROM messages WHERE id > ?`,
+					args: [socket.handshake.auth.serverOffset ?? 0],
+				});
+				results.rows.forEach((row) => {
+					socket.emit("message", row.content, row.id.toString());
+				});
+			} catch (e) {
+				console.log(e);
+				return;
+			}
+		}
 	});
 });
 

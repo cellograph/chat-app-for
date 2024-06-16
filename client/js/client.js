@@ -1,6 +1,12 @@
 import { io } from "https://cdn.socket.io/4.5.1/socket.io.esm.min.js";
 
-const socket = io();
+const socket = io({
+	auth: {
+		token: "123",
+		username: "alex",
+		serverOffset: 0,
+	},
+});
 
 const input = document.getElementById("input");
 const form = document.getElementById("form");
@@ -15,7 +21,7 @@ form.addEventListener("submit", (e) => {
 	}
 });
 
-socket.on("message", (msg) => {
+socket.on("message", (msg, serverOffset) => {
 	// const item = `<li>${msg}</li>`;
 	// messages.insertAdjacentHTML("beforeend", item);
 	const li = document.createElement("li");
@@ -29,4 +35,5 @@ socket.on("message", (msg) => {
 
 	li.appendChild(small);
 	document.getElementById("messages").appendChild(li);
+	socket.auth.serverOffset = serverOffset;
 });
