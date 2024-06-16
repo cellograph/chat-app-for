@@ -12,3 +12,11 @@ form.addEventListener("submit", (e) => {
 		input.value = "";
 	}
 });
+
+socket.on("message", (msg) => {
+	// const item = `<li>${msg}</li>`;
+	// messages.insertAdjacentHTML("beforeend", item);
+	const li = document.createElement("li");
+	li.textContent = msg;
+	document.getElementById("messages").appendChild(li);
+});

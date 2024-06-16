@@ -5,7 +5,7 @@ import { createServer } from "node:http";
 
 const app = express();
 const server = createServer(app);
-const io = new Server(server);
+const io = new Server(server, { connectionStateRecovery: true });
 const port = process.env.PORT ?? 3000;
 app.use(logger("dev"));
 app.use(express.static("client"));
@@ -16,7 +16,7 @@ io.on("connection", (socket) => {
 		console.log("A user has disconnected");
 	});
 	socket.on("message", (msg) => {
-		console.log("message received: ", msg);
+		io.emit("message", msg);
 	});
 });
 
