@@ -15,6 +15,9 @@ io.on("connection", (socket) => {
 	socket.on("disconnect", () => {
 		console.log("A user has disconnected");
 	});
+	socket.on("message", (msg) => {
+		console.log("message received: ", msg);
+	});
 });
 
 app.get("/", (req, res) => {
