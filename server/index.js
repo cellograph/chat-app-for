@@ -2,7 +2,6 @@ import express from "express";
 import logger from "morgan";
 import dotenv from "dotenv";
 import { createClient } from "@libsql/client";
-
 import { Server } from "socket.io";
 import { createServer } from "node:http";
 
@@ -16,62 +15,83 @@ const db = createClient({
 	authToken: process.env.DATABASE_AUTH_TOKEN,
 });
 
-await db.execute(
-	`CREATE TABLE IF NOT EXISTS messages (
-	id INTEGER PRIMARY KEY AUTOINCREMENT,
-	content TEXT,
-	date DATETIME DEFAULT CURRENT_TIMESTAMP
-)`
-);
+await db.execute(`
+	CREATE TABLE IF NOT EXISTS messages (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		token TEXT,
+		content TEXT,
+		date DATETIME DEFAULT CURRENT_TIMESTAMP
+	)
+`);
 
 const port = process.env.PORT ?? 3000;
 
 app.use(logger("dev"));
+app.use(express.json());
 app.use(express.static("client"));
 
-io.on("connection", async (socket) => {
-	console.log("A user connected");
+const tokenMap = new Map();
+
+io.use((socket, next) => {
+	const token = socket.handshake.auth.token;
+	if (token) {
+		socket.token = token;
+		next();
+	} else {
+		next(new Error("Authentication error"));
+	}
+});
+
+io.on("connection", (socket) => {
+	console.log(`User connected with token: ${socket.token}`);
+
+	if (!tokenMap.has(socket.token)) {
+		tokenMap.set(socket.token, []);
+	}
+	tokenMap.get(socket.token).push(socket);
+
 	socket.on("disconnect", () => {
-		console.log("A user has disconnected");
+		console.log(`User with token ${socket.token} disconnected`);
+		const sockets = tokenMap.get(socket.token);
+		const index = sockets.indexOf(socket);
+		if (index !== -1) {
+			sockets.splice(index, 1);
+		}
+		if (sockets.length === 0) {
+			tokenMap.delete(socket.token);
+		}
 	});
+
 	socket.on("message", async (msg) => {
-		let message;
 		try {
 			const now = new Date();
-			const formattedDate = `${now.toLocaleTimeString()} ${now.toLocaleDateString()}`;
-			message = await db.execute({
-				sql: `INSERT INTO messages (content, date) VALUES (:msg, :date)`,
-				args: { msg, date: formattedDate },
+			const formattedDate = now.toLocaleString();
+
+			await db.execute({
+				sql: `INSERT INTO messages (token, content, date) VALUES (:token, :content, :date)`,
+				args: { token: socket.token, content: msg, date: formattedDate },
 			});
-		} catch (e) {
-			console.log(e);
-			return;
+
+			const messageData = {
+				token: socket.token,
+				content: msg,
+				date: formattedDate,
+			};
+
+			const sockets = tokenMap.get(socket.token);
+			if (sockets) {
+				sockets.forEach((s) => s.emit("message", messageData.content, messageData.date));
+			}
+		} catch (error) {
+			console.error(error);
 		}
-		io.emit("message", msg, message.lastInsertRowid.toString());
 	});
-
-	console.log(socket.handshake.auth);
-
-	if (!socket.recovered) {
-		try {
-			const results = await db.execute({
-				sql: `SELECT id, content FROM messages WHERE id > ?`,
-				args: [socket.handshake.auth.serverOffset ?? 0],
-			});
-			results.rows.forEach((row) => {
-				socket.emit("message", row.content, row.id.toString());
-			});
-		} catch (e) {
-			console.log(e);
-			return;
-		}
-	}
 });
 
 app.get("/", (req, res) => {
 	res.sendFile(process.cwd() + "/client/index.html");
 });
 
-server.listen(3000, () => {
+server.listen(port, () => {
 	console.log(`Chat App listening on port http://localhost:${port}`);
 });

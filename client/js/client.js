@@ -1,41 +1,56 @@
 import { io } from "https://cdn.socket.io/4.5.1/socket.io.esm.min.js";
 
-const socket = io({
-	auth: {
-		token: "123",
-		username: "alex",
-		serverOffset: 0,
-	},
-});
+let socket;
 
-const input = document.getElementById("input");
-const form = document.getElementById("form");
-const now = new Date();
-const formattedDateTime = now.toLocaleString();
+document.addEventListener("DOMContentLoaded", () => {
+	const tokenForm = document.getElementById("token-form");
+	const tokenInput = document.getElementById("token-input");
+	const chatSection = document.getElementById("chat");
+	const authSection = document.getElementById("auth");
+	const input = document.getElementById("input");
+	const form = document.getElementById("form");
+	const messages = document.getElementById("messages");
+	const now = new Date();
+	const formattedDateTime = now.toLocaleString();
 
-form.addEventListener("submit", (e) => {
-	e.preventDefault();
-	if (input.value) {
-		socket.emit("message", input.value);
-		input.value = "";
-	}
-});
+	tokenForm.addEventListener("submit", (e) => {
+		e.preventDefault();
+		const token = tokenInput.value;
 
-socket.on("message", (msg, serverOffset) => {
-	// const item = `<li>${msg}</li>`;
-	// messages.insertAdjacentHTML("beforeend", item);
-	const li = document.createElement("li");
-	li.textContent = msg;
+		socket = io({
+			auth: {
+				token: token,
+				serverOffset: 0,
+			},
+		});
 
-	const small = document.createElement("small");
-	small.textContent = formattedDateTime;
+		socket.on("connect", () => {
+			authSection.style.display = "none";
+		});
 
-	small.style.fontSize = "0.5rem";
-	small.style.color = "#999";
+		form.addEventListener("submit", (e) => {
+			e.preventDefault();
+			if (input.value) {
+				socket.emit("message", input.value);
+				input.value = "";
+			}
+		});
 
-	li.appendChild(small);
-	document.getElementById("messages").appendChild(li);
-	socket.auth.serverOffset = serverOffset;
+		socket.on("message", (msg, serverOffset) => {
+			const li = document.createElement("li");
+			li.textContent = msg;
 
-	messages.scrollTop = messages.scrollHeight;
+			const small = document.createElement("small");
+			small.textContent = formattedDateTime;
+
+			small.style.fontSize = "0.5rem";
+			small.style.color = "#999";
+
+			li.appendChild(small);
+			messages.appendChild(li);
+			socket.auth.serverOffset = serverOffset;
+
+			messages.scrollTop = messages.scrollHeight;
+		});
+	});
 });
