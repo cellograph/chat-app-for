@@ -1,6 +1,7 @@
 import express from "express";
 import logger from "morgan";
 import dotenv from "dotenv";
+import { createClient } from "@libsql/client";
 import { Server } from "socket.io";
 import { createServer } from "node:http";
 
@@ -9,30 +10,79 @@ const app = express();
 const server = createServer(app);
 const io = new Server(server, { connectionStateRecovery: true });
 
+const db = createClient({
+	url: process.env.DATABASE_URL,
+	authToken: process.env.DATABASE_AUTH_TOKEN,
+});
+
+await db.execute(`
+	CREATE TABLE IF NOT EXISTS messages (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		token TEXT,
+		username TEXT,
+		content TEXT,
+		date DATETIME DEFAULT CURRENT_TIMESTAMP
+	)
+`);
+
 const port = process.env.PORT ?? 3000;
 
 app.use(logger("dev"));
 app.use(express.json());
 app.use(express.static("client"));
 
+const activeUsers = {};
+
+io.use((socket, next) => {
+	const token = socket.handshake.auth.token;
+	const username = socket.handshake.auth.username;
+
+	if (!token || !username) {
+		return next(new Error("Authentication error"));
+	}
+
+	socket.token = token;
+	socket.username = username;
+	next();
+});
+
 io.on("connection", (socket) => {
-	console.log(`User connected with username: ${socket.handshake.auth.username}`);
+	const token = socket.token;
+	const username = socket.username;
+
+	console.log(`User connected with username: ${username} and token: ${token}`);
+
+	if (!activeUsers[token]) {
+		activeUsers[token] = {};
+	}
+	activeUsers[token][username] = socket;
 
 	socket.on("disconnect", () => {
-		console.log(`User with username ${socket.handshake.auth.username} disconnected`);
+		console.log(`User with username ${username} and token ${token} disconnected`);
+		delete activeUsers[token][username];
+		if (Object.keys(activeUsers[token]).length === 0) {
+			delete activeUsers[token];
+		}
 	});
 
 	socket.on("message", async (msg) => {
 		const now = new Date();
 		const formattedDate = now.toLocaleString();
 
-		const messageData = {
-			username: socket.handshake.auth.username,
-			content: msg,
-			date: formattedDate,
-		};
+		try {
+			await db.execute({
+				sql: `INSERT INTO messages (token, username, content, date) VALUES (?, ?, ?, ?)`,
+				args: [token, username, msg, formattedDate],
+			});
 
-		io.emit("message", messageData.content, messageData.date, messageData.username);
+			if (activeUsers[token] && activeUsers[token][username]) {
+				Object.keys(activeUsers[token]).forEach((user) => {
+					activeUsers[token][user].emit("message", msg, username);
+				});
+			}
+		} catch (error) {
+			console.error("Error inserting message into database:", error);
+		}
 	});
 });
 
