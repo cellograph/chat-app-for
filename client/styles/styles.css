@@ -1,3 +1,5 @@
+/* styles.css */
+
 *,
 *::before,
 *::after {
@@ -68,14 +70,15 @@ body {
 	color: #555;
 }
 
-#messages > li:nth-child(odd) {
-	background-color: #dcf8c6;
-	align-self: flex-start;
+#messages > li.own-message {
+	align-self: flex-end;
+	background-color: #07c;
+	color: #fff;
 }
 
-#messages > li:nth-child(even) {
-	background-color: #fff;
-	align-self: flex-end;
+#messages > li:not(.own-message) {
+	align-self: flex-start;
+	background-color: #dcf8c6;
 }
 
 #form {
@@ -130,7 +133,8 @@ body {
 	width: fit-content;
 }
 
-#token-input {
+#token-input,
+#username-input {
 	padding: 10px;
 	font-size: 16px;
 	border: 1px solid #ddd;

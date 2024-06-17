@@ -1,10 +1,12 @@
 import { io } from "https://cdn.socket.io/4.5.1/socket.io.esm.min.js";
 
 let socket;
+let currentUsername; // Variable para almacenar el nombre de usuario actual
 
 document.addEventListener("DOMContentLoaded", () => {
 	const tokenForm = document.getElementById("token-form");
 	const tokenInput = document.getElementById("token-input");
+	const usernameInput = document.getElementById("username-input"); // Input para el username
 	const chatSection = document.getElementById("chat");
 	const authSection = document.getElementById("auth");
 	const input = document.getElementById("input");
@@ -16,15 +18,17 @@ document.addEventListener("DOMContentLoaded", () => {
 	tokenForm.addEventListener("submit", (e) => {
 		e.preventDefault();
 		const token = tokenInput.value.trim();
+		const username = usernameInput.value.trim();
 
-		if (token === "") {
-			alert("Token cannot be empty");
+		if (token === "" || username === "") {
+			alert("Token and username cannot be empty");
 			return;
 		}
 
 		socket = io({
 			auth: {
 				token: token,
+				username: username, // Envía el username al servidor
 				serverOffset: 0,
 			},
 		});
@@ -32,6 +36,7 @@ document.addEventListener("DOMContentLoaded", () => {
 		socket.on("connect", () => {
 			authSection.classList.add("hidden");
 			chatSection.classList.remove("hidden");
+			currentUsername = username; // Almacena el nombre de usuario actual
 		});
 
 		form.addEventListener("submit", (e) => {
@@ -42,7 +47,7 @@ document.addEventListener("DOMContentLoaded", () => {
 			}
 		});
 
-		socket.on("message", (msg, serverOffset) => {
+		socket.on("message", (msg, serverOffset, senderUsername) => {
 			const li = document.createElement("li");
 			li.textContent = msg;
 
@@ -53,9 +58,12 @@ document.addEventListener("DOMContentLoaded", () => {
 			small.style.color = "#999";
 
 			li.appendChild(small);
-			messages.appendChild(li);
-			socket.auth.serverOffset = serverOffset;
 
+			if (senderUsername === currentUsername) {
+				li.classList.add("own-message"); // Agrega clase own-message si el mensaje es del usuario actual
+			}
+
+			messages.appendChild(li);
 			messages.scrollTop = messages.scrollHeight;
 		});
 	});
