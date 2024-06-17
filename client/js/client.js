@@ -36,4 +36,6 @@ socket.on("message", (msg, serverOffset) => {
 	li.appendChild(small);
 	document.getElementById("messages").appendChild(li);
 	socket.auth.serverOffset = serverOffset;
+
+	messages.scrollTop = messages.scrollHeight;
 });
