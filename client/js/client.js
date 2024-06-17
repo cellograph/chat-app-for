@@ -15,7 +15,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
 	tokenForm.addEventListener("submit", (e) => {
 		e.preventDefault();
-		const token = tokenInput.value;
+		const token = tokenInput.value.trim();
+
+		if (token === "") {
+			alert("Token cannot be empty");
+			return;
+		}
 
 		socket = io({
 			auth: {
@@ -25,7 +30,8 @@ document.addEventListener("DOMContentLoaded", () => {
 		});
 
 		socket.on("connect", () => {
-			authSection.style.display = "none";
+			authSection.classList.add("hidden");
+			chatSection.classList.remove("hidden");
 		});
 
 		form.addEventListener("submit", (e) => {
