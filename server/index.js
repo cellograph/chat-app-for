@@ -8,12 +8,7 @@ import { createServer } from "node:http";
 dotenv.config();
 const app = express();
 const server = createServer(app);
-const io = new Server(server, {
-	connectionStateRecovery: {
-		maxRetries: 10,
-		retryTimeout: 1000,
-	},
-});
+const io = new Server(server, { connectionStateRecovery: true });
 
 const db = createClient({
 	url: process.env.DATABASE_URL,

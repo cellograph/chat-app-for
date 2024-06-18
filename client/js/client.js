@@ -65,6 +65,20 @@ function connectToChat(token, username) {
 		messages.appendChild(li);
 		messages.scrollTop = messages.scrollHeight;
 	});
+
+	// socket.on("generated-token", (token) => {
+	// 	console.log("Token recibido:", token);
+	// 	const tokenDisplay = document.getElementById("token-display");
+	// 	tokenDisplay.textContent = token;
+
+	// 	copyTextToClipboard(token)
+	// 		.then(() => {
+	// 			alert("Token copied to clipboard!");
+	// 		})
+	// 		.catch((err) => {
+	// 			console.error("Error copying token:", err);
+	// 		});
+	// });
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -83,9 +97,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
 	generateTokenButton.addEventListener("click", (e) => {
 		e.preventDefault();
-		const randomNumber = Math.floor(Math.random() * 1000);
-		tokenDisplay.textContent = randomNumber;
-		tokenInput.value = randomNumber;
+		const randomToken = Math.floor(Math.random() * 1000);
+		tokenDisplay.textContent = randomToken;
 	});
 
 	tokenDisplay.addEventListener("click", () => {
