@@ -66,22 +66,24 @@ io.on("connection", (socket) => {
 	});
 
 	socket.on("message", async (msg) => {
-		const now = new Date();
-		const formattedDate = now.toLocaleString();
+		if (Object.keys(activeUsers[token]).length >= 2) {
+			const now = new Date();
+			const formattedDate = now.toLocaleString();
 
-		try {
-			await db.execute({
-				sql: `INSERT INTO messages (token, username, content, date) VALUES (?, ?, ?, ?)`,
-				args: [token, username, msg, formattedDate],
-			});
+			try {
+				await db.execute({
+					sql: `INSERT INTO messages (token, username, content, date) VALUES (?, ?, ?, ?)`,
+					args: [token, username, msg, formattedDate],
+				});
 
-			if (activeUsers[token] && activeUsers[token][username]) {
 				Object.keys(activeUsers[token]).forEach((user) => {
 					activeUsers[token][user].emit("message", msg, username);
 				});
+			} catch (error) {
+				console.error("Error inserting message into database:", error);
 			}
-		} catch (error) {
-			console.error("Error inserting message into database:", error);
+		} else {
+			console.log("Message not saved. Less than two users connected with the same token.");
 		}
 	});
 });
