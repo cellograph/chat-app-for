@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import { createClient } from "@libsql/client";
 import { Server } from "socket.io";
 import { createServer } from "node:http";
+import { v4 as uuidv4 } from "uuid";
 
 dotenv.config();
 const app = express();
@@ -38,6 +39,9 @@ io.use((socket, next) => {
 	const username = socket.handshake.auth.username;
 
 	if (!token || !username) {
+		if (socket.handshake.query.purpose === "generateToken") {
+			return next();
+		}
 		return next(new Error("Authentication error"));
 	}
 
@@ -47,45 +51,57 @@ io.use((socket, next) => {
 });
 
 io.on("connection", (socket) => {
-	const token = socket.token;
-	const username = socket.username;
+	const purpose = socket.handshake.query.purpose;
 
-	console.log(`User connected with username: ${username} and token: ${token}`);
+	if (purpose === "generateToken") {
+		socket.on("generateToken", () => {
+			const generatedToken = uuidv4().split("-")[0];
+			socket.emit("generated-token", generatedToken);
+			socket.disconnect();
+		});
+	} else {
+		const token = socket.token;
+		const username = socket.username;
 
-	if (!activeUsers[token]) {
-		activeUsers[token] = {};
-	}
-	activeUsers[token][username] = socket;
+		console.log(`User connected with username: ${username} and token: ${token}`);
 
-	socket.on("disconnect", () => {
-		console.log(`User with username ${username} and token ${token} disconnected`);
-		delete activeUsers[token][username];
-		if (Object.keys(activeUsers[token]).length === 0) {
-			delete activeUsers[token];
+		if (!activeUsers[token]) {
+			activeUsers[token] = {};
 		}
-	});
+		activeUsers[token][username] = socket;
 
-	socket.on("message", async (msg) => {
-		if (Object.keys(activeUsers[token]).length >= 2) {
-			const now = new Date();
-			const formattedDate = now.toLocaleString();
-
-			try {
-				await db.execute({
-					sql: `INSERT INTO messages (token, username, content, date) VALUES (?, ?, ?, ?)`,
-					args: [token, username, msg, formattedDate],
-				});
-
-				Object.keys(activeUsers[token]).forEach((user) => {
-					activeUsers[token][user].emit("message", msg, username);
-				});
-			} catch (error) {
-				console.error("Error inserting message into database:", error);
+		socket.on("disconnect", () => {
+			console.log(`User with username ${username} and token ${token} disconnected`);
+			delete activeUsers[token][username];
+			if (Object.keys(activeUsers[token]).length === 0) {
+				delete activeUsers[token];
 			}
-		} else {
-			console.log("Message not saved. Less than two users connected with the same token.");
-		}
-	});
+		});
+
+		socket.on("message", async (msg) => {
+			if (Object.keys(activeUsers[token]).length >= 2) {
+				const now = new Date();
+				const formattedDate = now.toLocaleString();
+
+				try {
+					await db.execute({
+						sql: `INSERT INTO messages (token, username, content, date) VALUES (?, ?, ?, ?)`,
+						args: [token, username, msg, formattedDate],
+					});
+
+					Object.keys(activeUsers[token]).forEach((user) => {
+						activeUsers[token][user].emit("message", msg, username);
+					});
+				} catch (error) {
+					console.error("Error inserting message into database:", error);
+				}
+			} else {
+				console.log(
+					"Message not saved. Less than two users connected with the same token."
+				);
+			}
+		});
+	}
 });
 
 app.get("/", (req, res) => {

@@ -4,6 +4,39 @@ let socket;
 let currentToken;
 let currentUsername;
 
+function getToken() {
+	// Abrir el socket con el propósito de generar token
+	socket = io({
+		query: {
+			purpose: "generateToken",
+		},
+	});
+
+	socket.on("connect", () => {
+		console.log("Conectado al servidor para generar token");
+
+		// Emitir evento para solicitar el token
+		socket.emit("generateToken");
+
+		// Escuchar el evento de token generado
+		socket.on("generated-token", (token) => {
+			console.log("Token recibido:", token);
+
+			// Actualizar la interfaz con el token recibido
+			const tokenDisplay = document.getElementById("token-display");
+			tokenDisplay.textContent = token;
+
+			// Cerrar el socket después de recibir el token
+			socket.disconnect();
+			console.log("Socket desconectado después de recibir el token");
+		});
+	});
+
+	socket.on("connect_error", (err) => {
+		console.error("Error de conexión:", err);
+	});
+}
+
 async function copyTextToClipboard(textToCopy) {
 	try {
 		if (navigator?.clipboard?.writeText) {
@@ -65,20 +98,6 @@ function connectToChat(token, username) {
 		messages.appendChild(li);
 		messages.scrollTop = messages.scrollHeight;
 	});
-
-	// socket.on("generated-token", (token) => {
-	// 	console.log("Token recibido:", token);
-	// 	const tokenDisplay = document.getElementById("token-display");
-	// 	tokenDisplay.textContent = token;
-
-	// 	copyTextToClipboard(token)
-	// 		.then(() => {
-	// 			alert("Token copied to clipboard!");
-	// 		})
-	// 		.catch((err) => {
-	// 			console.error("Error copying token:", err);
-	// 		});
-	// });
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -97,8 +116,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 	generateTokenButton.addEventListener("click", (e) => {
 		e.preventDefault();
-		const randomToken = Math.floor(Math.random() * 1000);
-		tokenDisplay.textContent = randomToken;
+		getToken();
 	});
 
 	tokenDisplay.addEventListener("click", () => {
