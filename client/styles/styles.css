@@ -125,7 +125,7 @@ body {
 	margin-bottom: 20px;
 }
 
-#token-form {
+#login-form {
 	display: flex;
 	flex-direction: column;
 	width: fit-content;
