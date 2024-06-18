@@ -5,7 +5,6 @@ let currentToken;
 let currentUsername;
 
 function getToken() {
-	// Abrir el socket con el propósito de generar token
 	socket = io({
 		query: {
 			purpose: "generateToken",
@@ -14,21 +13,21 @@ function getToken() {
 
 	socket.on("connect", () => {
 		console.log("Conectado al servidor para generar token");
-
-		// Emitir evento para solicitar el token
 		socket.emit("generateToken");
 
-		// Escuchar el evento de token generado
 		socket.on("generated-token", (token) => {
 			console.log("Token recibido:", token);
-
-			// Actualizar la interfaz con el token recibido
 			const tokenDisplay = document.getElementById("token-display");
 			tokenDisplay.textContent = token;
 
-			// Cerrar el socket después de recibir el token
 			socket.disconnect();
 			console.log("Socket desconectado después de recibir el token");
+		});
+
+		socket.on("token-error", (message) => {
+			console.error(message);
+			alert("Error generating token. Please try again.");
+			socket.disconnect();
 		});
 	});
 

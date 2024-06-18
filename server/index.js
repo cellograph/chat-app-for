@@ -26,6 +26,14 @@ await db.execute(`
 	)
 `);
 
+await db.execute(`
+	CREATE TABLE IF NOT EXISTS tokens (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		token TEXT UNIQUE,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+	)
+`);
+
 const port = process.env.PORT ?? 3000;
 
 app.use(logger("dev"));
@@ -34,7 +42,7 @@ app.use(express.static("client"));
 
 const activeUsers = {};
 
-io.use((socket, next) => {
+io.use(async (socket, next) => {
 	const token = socket.handshake.auth.token;
 	const username = socket.handshake.auth.username;
 
@@ -45,18 +53,40 @@ io.use((socket, next) => {
 		return next(new Error("Authentication error"));
 	}
 
-	socket.token = token;
-	socket.username = username;
-	next();
+	try {
+		const result = await db.execute({
+			sql: `SELECT token FROM tokens WHERE token = ?`,
+			args: [token],
+		});
+
+		if (result.rows.length === 0) {
+			return next(new Error("Invalid token"));
+		}
+
+		socket.token = token;
+		socket.username = username;
+		next();
+	} catch (error) {
+		return next(new Error("Database error"));
+	}
 });
 
 io.on("connection", (socket) => {
 	const purpose = socket.handshake.query.purpose;
 
 	if (purpose === "generateToken") {
-		socket.on("generateToken", () => {
+		socket.on("generateToken", async () => {
 			const generatedToken = uuidv4().split("-")[0];
-			socket.emit("generated-token", generatedToken);
+			try {
+				await db.execute({
+					sql: `INSERT INTO tokens (token) VALUES (?)`,
+					args: [generatedToken],
+				});
+				socket.emit("generated-token", generatedToken);
+			} catch (error) {
+				console.error("Error inserting token into database:", error);
+				socket.emit("token-error", "Error generating token");
+			}
 			socket.disconnect();
 		});
 	} else {
