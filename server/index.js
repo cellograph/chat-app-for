@@ -17,21 +17,21 @@ const db = createClient({
 });
 
 await db.execute(`
-	CREATE TABLE IF NOT EXISTS messages (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		token TEXT,
-		username TEXT,
-		content TEXT,
-		date DATETIME DEFAULT CURRENT_TIMESTAMP
-	)
+    CREATE TABLE IF NOT EXISTS messages (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        token TEXT,
+        username TEXT,
+        content TEXT,
+        date DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
 `);
 
 await db.execute(`
-	CREATE TABLE IF NOT EXISTS tokens (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		token TEXT UNIQUE,
-		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-	)
+    CREATE TABLE IF NOT EXISTS tokens (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        token TEXT UNIQUE,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
 `);
 
 const port = process.env.PORT ?? 3000;
@@ -71,22 +71,21 @@ io.use(async (socket, next) => {
 	}
 });
 
-io.on("connection", (socket) => {
+io.on("connection", async (socket) => {
 	const purpose = socket.handshake.query.purpose;
 
 	if (purpose === "generateToken") {
 		socket.on("generateToken", async () => {
 			const generatedToken = uuidv4().split("-")[0];
-			try {
-				await db.execute({
+			await db
+				.execute({
 					sql: `INSERT INTO tokens (token) VALUES (?)`,
 					args: [generatedToken],
+				})
+				.catch((error) => {
+					console.error("Error inserting token into database:", error);
 				});
-				socket.emit("generated-token", generatedToken);
-			} catch (error) {
-				console.error("Error inserting token into database:", error);
-				socket.emit("token-error", "Error generating token");
-			}
+			socket.emit("generated-token", generatedToken);
 			socket.disconnect();
 		});
 	} else {
@@ -100,53 +99,55 @@ io.on("connection", (socket) => {
 		}
 		activeUsers[token][username] = socket;
 
-		if (Object.keys(activeUsers[token]).length === 1) {
-			// First user with this token, save the token to the database
-			db.execute({
-				sql: `INSERT INTO tokens (token) VALUES (?)`,
+		// Send previous messages to the newly connected user
+		try {
+			const messages = await db.execute({
+				sql: `SELECT username, content, date FROM messages WHERE token = ? ORDER BY date ASC`,
 				args: [token],
-			}).catch((error) => {
-				console.error("Error inserting token into database:", error);
 			});
+
+			messages.rows.forEach((msg) => {
+				socket.emit("message", msg.content, msg.username);
+			});
+		} catch (error) {
+			console.error("Error fetching messages from database:", error);
 		}
 
 		socket.on("disconnect", async () => {
 			console.log(`User with username ${username} and token ${token} disconnected`);
 			delete activeUsers[token][username];
 			if (Object.keys(activeUsers[token]).length === 0) {
-				delete activeUsers[token];
+				// No users left with this token, delete the token and its messages from the database
 				try {
 					await db.execute({
 						sql: `DELETE FROM tokens WHERE token = ?`,
 						args: [token],
 					});
+					await db.execute({
+						sql: `DELETE FROM messages WHERE token = ?`,
+						args: [token],
+					});
 				} catch (error) {
-					console.error("Error deleting token from database:", error);
+					console.error("Error deleting token/messages from database:", error);
 				}
 			}
 		});
 
 		socket.on("message", async (msg) => {
-			if (Object.keys(activeUsers[token]).length >= 2) {
-				const now = new Date();
-				const formattedDate = now.toLocaleString();
+			const now = new Date();
+			const formattedDate = now.toLocaleString();
 
-				try {
-					await db.execute({
-						sql: `INSERT INTO messages (token, username, content, date) VALUES (?, ?, ?, ?)`,
-						args: [token, username, msg, formattedDate],
-					});
+			try {
+				await db.execute({
+					sql: `INSERT INTO messages (token, username, content, date) VALUES (?, ?, ?, ?)`,
+					args: [token, username, msg, formattedDate],
+				});
 
-					Object.keys(activeUsers[token]).forEach((user) => {
-						activeUsers[token][user].emit("message", msg, username);
-					});
-				} catch (error) {
-					console.error("Error inserting message into database:", error);
-				}
-			} else {
-				console.log(
-					"Message not saved. Less than two users connected with the same token."
-				);
+				Object.keys(activeUsers[token]).forEach((user) => {
+					activeUsers[token][user].emit("message", msg, username);
+				});
+			} catch (error) {
+				console.error("Error inserting message into database:", error);
 			}
 		});
 	}
