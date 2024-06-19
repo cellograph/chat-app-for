@@ -1,5 +1,8 @@
 {
 	"version": 2,
-	"builds": [{ "src": "client/index.html", "use": "@vercel/static-build" }],
-	"routes": [{ "src": "/(.*)", "dest": "client/$1" }]
+	"routes": [
+		{ "src": "/js/(.*)", "dest": "client/js/$1" },
+		{ "src": "/styles/(.*)", "dest": "client/styles/$1" },
+		{ "src": "/(.*)", "dest": "client/index.html" }
+	]
 }
