@@ -1,8 +1,0 @@
-{
-	"version": 2,
-	"routes": [
-		{ "src": "/js/(.*)", "dest": "client/js/$1" },
-		{ "src": "/styles/(.*)", "dest": "client/styles/$1" },
-		{ "src": "/(.*)", "dest": "client/index.html" }
-	]
-}
