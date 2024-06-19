@@ -3,6 +3,7 @@ import { io } from "https://cdn.socket.io/4.5.1/socket.io.esm.min.js";
 let socket;
 let currentToken;
 let currentUsername;
+const userColors = {};
 
 function getToken() {
 	socket = io({
@@ -47,6 +48,14 @@ async function copyTextToClipboard(textToCopy) {
 	}
 }
 
+function getColorForUser(username) {
+	if (!userColors[username]) {
+		const randomColor = `#${Math.floor(Math.random() * 16777215).toString(16)}`;
+		userColors[username] = randomColor;
+	}
+	return userColors[username];
+}
+
 function connectToChat(token, username) {
 	if (token === "" || username === "") {
 		alert("Token and username cannot be empty");
@@ -57,7 +66,6 @@ function connectToChat(token, username) {
 		auth: {
 			token: token,
 			username: username,
-			serverOffset: 0,
 		},
 	});
 
@@ -77,13 +85,13 @@ function connectToChat(token, username) {
 		}
 	});
 
-	socket.on("message", (msg, senderUsername) => {
+	socket.on("message", (msg, senderUsername, timestamp) => {
 		const messages = document.getElementById("messages");
 		const li = document.createElement("li");
 		li.textContent = `${msg}`;
 
 		const small = document.createElement("small");
-		small.textContent = new Date().toLocaleString();
+		small.textContent = new Date(timestamp).toLocaleString();
 		const smallName = document.createElement("small");
 		smallName.textContent = senderUsername;
 
@@ -91,6 +99,8 @@ function connectToChat(token, username) {
 		smallName.style.color = "#999";
 		small.style.fontSize = "0.5rem";
 		small.style.color = "#999";
+
+		li.style.backgroundColor = getColorForUser(senderUsername);
 
 		li.appendChild(smallName);
 		li.appendChild(small);

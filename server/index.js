@@ -107,7 +107,7 @@ io.on("connection", async (socket) => {
 			});
 
 			messages.rows.forEach((msg) => {
-				socket.emit("message", msg.content, msg.username);
+				socket.emit("message", msg.content, msg.username, msg.date);
 			});
 		} catch (error) {
 			console.error("Error fetching messages from database:", error);
@@ -135,7 +135,7 @@ io.on("connection", async (socket) => {
 
 		socket.on("message", async (msg) => {
 			const now = new Date();
-			const formattedDate = now.toLocaleString();
+			const formattedDate = now.toISOString();
 
 			try {
 				await db.execute({
@@ -144,7 +144,7 @@ io.on("connection", async (socket) => {
 				});
 
 				Object.keys(activeUsers[token]).forEach((user) => {
-					activeUsers[token][user].emit("message", msg, username);
+					activeUsers[token][user].emit("message", msg, username, formattedDate);
 				});
 			} catch (error) {
 				console.error("Error inserting message into database:", error);
