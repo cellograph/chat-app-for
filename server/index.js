@@ -100,11 +100,29 @@ io.on("connection", (socket) => {
 		}
 		activeUsers[token][username] = socket;
 
-		socket.on("disconnect", () => {
+		if (Object.keys(activeUsers[token]).length === 1) {
+			// First user with this token, save the token to the database
+			db.execute({
+				sql: `INSERT INTO tokens (token) VALUES (?)`,
+				args: [token],
+			}).catch((error) => {
+				console.error("Error inserting token into database:", error);
+			});
+		}
+
+		socket.on("disconnect", async () => {
 			console.log(`User with username ${username} and token ${token} disconnected`);
 			delete activeUsers[token][username];
 			if (Object.keys(activeUsers[token]).length === 0) {
 				delete activeUsers[token];
+				try {
+					await db.execute({
+						sql: `DELETE FROM tokens WHERE token = ?`,
+						args: [token],
+					});
+				} catch (error) {
+					console.error("Error deleting token from database:", error);
+				}
 			}
 		});
 

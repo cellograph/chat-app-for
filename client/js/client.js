@@ -84,10 +84,15 @@ function connectToChat(token, username) {
 
 		const small = document.createElement("small");
 		small.textContent = new Date().toLocaleString();
+		const smallName = document.createElement("small");
+		smallName.textContent = senderUsername;
 
+		smallName.style.fontSize = "0.5rem";
+		smallName.style.color = "#999";
 		small.style.fontSize = "0.5rem";
 		small.style.color = "#999";
 
+		li.appendChild(smallName);
 		li.appendChild(small);
 
 		if (senderUsername === currentUsername) {
