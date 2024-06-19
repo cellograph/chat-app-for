@@ -24,13 +24,13 @@ This is a simple chat application built using Node.js, Express, Socket.io, and S
 1. Clone the repository:
 
     ```bash
-    git clone https://github.com/aleaguiard/chat-app-nodejs-socketio
+    git clone https://github.com/aleaguiard/chat-app-nodejs
     ```
 
 2. Change to the project directory:
 
     ```bash
-    cd chat-app
+    cd chat-app-nodejs
     ```
 
 3. Install the dependencies:
