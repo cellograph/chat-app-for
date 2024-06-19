@@ -6,16 +6,23 @@ import { Server } from "socket.io";
 import { createServer } from "node:http";
 import { v4 as uuidv4 } from "uuid";
 
+// Load environment variables from .env file
 dotenv.config();
+
+// Initialize Express app and create HTTP server
 const app = express();
 const server = createServer(app);
+
+// Initialize Socket.IO server with connection state recovery
 const io = new Server(server, { connectionStateRecovery: true });
 
+// Create database client
 const db = createClient({
 	url: process.env.DATABASE_URL,
 	authToken: process.env.DATABASE_AUTH_TOKEN,
 });
 
+// Ensure necessary database tables exist
 await db.execute(`
     CREATE TABLE IF NOT EXISTS messages (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -34,14 +41,18 @@ await db.execute(`
     )
 `);
 
+// Define the port for the Express app
 const port = process.env.PORT ?? 3000;
 
-app.use(logger("dev"));
-app.use(express.json());
-app.use(express.static("client"));
+// Middleware setup
+app.use(logger("dev")); // Logging middleware
+app.use(express.json()); // Parse JSON request bodies
+app.use(express.static("client")); // Serve static files from 'client' directory
 
+// Object to track active users by token
 const activeUsers = {};
 
+// Socket.IO middleware for authentication and error handling
 io.use(async (socket, next) => {
 	const token = socket.handshake.auth.token;
 	const username = socket.handshake.auth.username;
@@ -71,6 +82,7 @@ io.use(async (socket, next) => {
 	}
 });
 
+// Socket.IO event handlers
 io.on("connection", async (socket) => {
 	const purpose = socket.handshake.query.purpose;
 
@@ -153,10 +165,12 @@ io.on("connection", async (socket) => {
 	}
 });
 
+// Serve index.html for root URL
 app.get("/", (req, res) => {
 	res.sendFile(process.cwd() + "/client/index.html");
 });
 
+// Start listening on the specified port
 server.listen(port, () => {
 	console.log(`Chat App listening on port http://localhost:${port}`);
 });

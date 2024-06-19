@@ -1,10 +1,17 @@
 import { io } from "https://cdn.socket.io/4.5.1/socket.io.esm.min.js";
 
+// Variables to store socket connection, current token, and current username
 let socket;
 let currentToken;
 let currentUsername;
+
+// Object to store user colors based on username
 const userColors = {};
 
+/**
+ * Function to generate a token by connecting to the server
+ * and emitting a "generateToken" event.
+ */
 function getToken() {
 	socket = io({
 		query: {
@@ -13,16 +20,16 @@ function getToken() {
 	});
 
 	socket.on("connect", () => {
-		console.log("Conectado al servidor para generar token");
+		console.log("Connected to the server to generate token");
 		socket.emit("generateToken");
 
 		socket.on("generated-token", (token) => {
-			console.log("Token recibido:", token);
+			console.log("Received token:", token);
 			const tokenDisplay = document.getElementById("token-display");
 			tokenDisplay.textContent = token;
 
 			socket.disconnect();
-			console.log("Socket desconectado después de recibir el token");
+			console.log("Socket disconnected after receiving the token");
 		});
 
 		socket.on("token-error", (message) => {
@@ -33,10 +40,14 @@ function getToken() {
 	});
 
 	socket.on("connect_error", (err) => {
-		console.error("Error de conexión:", err);
+		console.error("Connection error:", err);
 	});
 }
 
+/**
+ * Function to copy text to clipboard using the Clipboard API.
+ * @param {string} textToCopy - The text to copy to clipboard.
+ */
 async function copyTextToClipboard(textToCopy) {
 	try {
 		if (navigator?.clipboard?.writeText) {
@@ -48,6 +59,11 @@ async function copyTextToClipboard(textToCopy) {
 	}
 }
 
+/**
+ * Function to generate a random color for a user based on their username.
+ * @param {string} username - The username of the user.
+ * @returns {string} - The generated color in hexadecimal format.
+ */
 function getColorForUser(username) {
 	if (!userColors[username]) {
 		const randomColor = `#${Math.floor(Math.random() * 16777215).toString(16)}`;
@@ -56,6 +72,11 @@ function getColorForUser(username) {
 	return userColors[username];
 }
 
+/**
+ * Function to connect to the chat using a given token and username.
+ * @param {string} token - The token used to connect to the chat.
+ * @param {string} username - The username used to connect to the chat.
+ */
 function connectToChat(token, username) {
 	if (token === "" || username === "") {
 		alert("Token and username cannot be empty");
