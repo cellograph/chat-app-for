@@ -95,6 +95,17 @@ function connectToChat(token, username) {
 		document.getElementById("chat").classList.remove("hidden");
 		currentToken = token;
 		currentUsername = username;
+
+		const tokenUsed = document.getElementById("token-used");
+		const userCount = document.getElementById("user-count");
+		tokenUsed.textContent = `Token: ${currentToken}`;
+		userCount.textContent = `Users connected: ${count}`;
+		socket.emit("request-user-count");
+	});
+
+	socket.on("update-user-count", (count) => {
+		const userCount = document.getElementById("user-count");
+		userCount.textContent = `Users connected: ${count}`;
 	});
 
 	document.getElementById("form").addEventListener("submit", (e) => {

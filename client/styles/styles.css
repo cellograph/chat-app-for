@@ -180,3 +180,38 @@ button[type="submit"]:hover,
 #generate-token:hover {
 	background-color: #0056b3;
 }
+
+#sharing {
+	font-size: 16px;
+	color: #fff;
+	background-color: #28a745;
+	border: 1px solid #1c7430;
+	padding: 10px;
+	text-align: center;
+	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+	width: 100%;
+	margin-bottom: 10px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	border-radius: 4px;
+	box-sizing: border-box;
+}
+
+#chat-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 10px;
+	background-color: #007bff;
+	color: #fff;
+	font-size: 14px;
+}
+
+#token-used,
+#user-count {
+	padding: 5px 10px;
+	border-radius: 4px;
+	background-color: #0056b3;
+	font-weight: bold;
+}

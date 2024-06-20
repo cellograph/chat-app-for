@@ -49,8 +49,9 @@ app.use(logger("dev")); // Logging middleware
 app.use(express.json()); // Parse JSON request bodies
 app.use(express.static("client")); // Serve static files from 'client' directory
 
-// Object to track active users by token
+// Object to track active users and their counts by token
 const activeUsers = {};
+const activeUserCounts = {};
 
 // Socket.IO middleware for authentication and error handling
 io.use(async (socket, next) => {
@@ -106,10 +107,17 @@ io.on("connection", async (socket) => {
 
 		console.log(`User connected with username: ${username} and token: ${token}`);
 
+		// Manage active users and their counts
 		if (!activeUsers[token]) {
 			activeUsers[token] = {};
+			activeUserCounts[token] = 0;
 		}
+
 		activeUsers[token][username] = socket;
+		activeUserCounts[token]++;
+
+		// Emit current user count to all clients
+		io.emit("update-user-count", token, activeUserCounts[token]);
 
 		// Send previous messages to the newly connected user
 		try {
@@ -128,7 +136,9 @@ io.on("connection", async (socket) => {
 		socket.on("disconnect", async () => {
 			console.log(`User with username ${username} and token ${token} disconnected`);
 			delete activeUsers[token][username];
-			if (Object.keys(activeUsers[token]).length === 0) {
+			activeUserCounts[token]--;
+
+			if (activeUserCounts[token] === 0) {
 				// No users left with this token, delete the token and its messages from the database
 				try {
 					await db.execute({
@@ -143,6 +153,9 @@ io.on("connection", async (socket) => {
 					console.error("Error deleting token/messages from database:", error);
 				}
 			}
+
+			// Emit updated user count to all clients
+			io.emit("update-user-count", token, activeUserCounts[token]);
 		});
 
 		socket.on("message", async (msg) => {
