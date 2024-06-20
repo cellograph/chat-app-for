@@ -107,7 +107,7 @@ function connectToChat(token, username) {
 
 	socket.on("update-user-count", (count) => {
 		const userCount = document.getElementById("user-count");
-		userCount.textContent = `Users connected: ${count}`;
+		userCount.textContent = `Users online: ${count}`;
 	});
 
 	document.getElementById("form").addEventListener("submit", (e) => {
