@@ -99,6 +99,10 @@ function connectToChat(token, username) {
 		const tokenUsed = document.getElementById("token-used");
 		tokenUsed.textContent = `Token: ${currentToken}`;
 		socket.emit("request-user-count");
+
+		// Save token and username to localStorage
+		localStorage.setItem("chatToken", currentToken);
+		localStorage.setItem("chatUsername", currentUsername);
 	});
 
 	socket.on("update-user-count", (count) => {
@@ -150,6 +154,15 @@ document.addEventListener("DOMContentLoaded", () => {
 	const generateTokenButton = document.getElementById("generate-token");
 	const tokenDisplay = document.getElementById("token-display");
 	const usernameInput = document.getElementById("username-input");
+
+	// Check if token and username exist in localStorage
+	const storedToken = localStorage.getItem("chatToken");
+	const storedUsername = localStorage.getItem("chatUsername");
+
+	if (storedToken && storedUsername) {
+		// Automatically connect with stored token and username
+		connectToChat(storedToken, storedUsername);
+	}
 
 	loginForm.addEventListener("submit", (e) => {
 		e.preventDefault();
