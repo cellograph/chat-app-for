@@ -117,7 +117,7 @@ io.on("connection", async (socket) => {
 		activeUserCounts[token]++;
 
 		// Emit current user count to all clients
-		io.emit("update-user-count", token, activeUserCounts[token]);
+		io.emit("update-user-count", activeUserCounts[token]);
 
 		// Send previous messages to the newly connected user
 		try {
@@ -155,7 +155,7 @@ io.on("connection", async (socket) => {
 			}
 
 			// Emit updated user count to all clients
-			io.emit("update-user-count", token, activeUserCounts[token]);
+			io.emit("update-user-count", activeUserCounts[token]);
 		});
 
 		socket.on("message", async (msg) => {

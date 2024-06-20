@@ -97,9 +97,7 @@ function connectToChat(token, username) {
 		currentUsername = username;
 
 		const tokenUsed = document.getElementById("token-used");
-		const userCount = document.getElementById("user-count");
 		tokenUsed.textContent = `Token: ${currentToken}`;
-		userCount.textContent = `Users connected: ${count}`;
 		socket.emit("request-user-count");
 	});
 
