@@ -1,16 +1,20 @@
-# Chat Application
+# Chat App
 
-This is a simple chat application built using Node.js, Express, Socket.io, and SQLite. The application allows users to generate tokens, connect with those tokens, and chat with others using the same token. Messages are stored in the database and can be retrieved when users reconnect.
+This is a real-time chat application built with Node.js, Express, Socket.IO, and SQLite. It allows users to generate tokens, join chat rooms, and communicate with each other in real-time.
+
+## Deployed App
+
+The application is deployed and accessible at [http://chat-app-nodejs-9sg2.onrender.com/](http://chat-app-nodejs-9sg2.onrender.com/).
 
 ## Features
 
--   **Token Generation:** Users can generate a unique token to join a chat session.
--   **Authentication:** Users must provide a valid token and username to connect to a chat session.
--   **Message Storage:** Messages are stored in a SQLite database and retrieved when users reconnect.
+-   **Token-Based Authentication:** Users can generate unique tokens to join specific chat rooms.
+-   **Real-Time Communication:** Messages are sent and received in real-time using Socket.IO.
+-   **User Count Display:** The number of active users in each chat room is displayed.
+-   **Message Persistence:** Messages are stored in a SQLite database and are available for users who join the chat room later.
 -   **Auto-delete Messages:** Messages are deleted from the database when no users are connected with the token.
 -   **Auto-delete Tokens:** Tokens are deleted from the database when no users are using them.
-
--   **Unique User Colors:** Each user is assigned a unique color for their messages.
+-   **User Colors:** Each user has a unique color for their messages.
 
 ## Getting Started
 
