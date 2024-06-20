@@ -155,6 +155,15 @@ document.addEventListener("DOMContentLoaded", () => {
 	const tokenDisplay = document.getElementById("token-display");
 	const usernameInput = document.getElementById("username-input");
 
+	document.getElementById("exit-chat").addEventListener("click", () => {
+		socket.disconnect();
+		document.getElementById("chat").classList.add("hidden");
+		document.getElementById("auth").classList.remove("hidden");
+		tokenInput.value = "";
+		usernameInput.value = "";
+		localStorage.removeItem("chatToken");
+		localStorage.removeItem("chatUsername");
+	});
 	// Check if token and username exist in localStorage
 	const storedToken = localStorage.getItem("chatToken");
 	const storedUsername = localStorage.getItem("chatUsername");
