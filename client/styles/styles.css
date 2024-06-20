@@ -92,6 +92,7 @@ body {
 	padding: 10px;
 	flex: 1;
 	margin-right: 10px;
+	height: 100%;
 }
 
 #input:focus {
@@ -106,6 +107,7 @@ body {
 	border-radius: 9999px;
 	padding: 10px 20px;
 	cursor: pointer;
+	height: 100%;
 }
 
 #form > button:hover {
@@ -212,7 +214,6 @@ button[type="submit"]:hover,
 	padding: 5px 10px;
 	border-radius: 4px;
 	background-color: #0056b3;
-	font-weight: bold;
 }
 #toast {
 	position: fixed;
