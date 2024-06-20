@@ -214,3 +214,15 @@ button[type="submit"]:hover,
 	background-color: #0056b3;
 	font-weight: bold;
 }
+#toast {
+	position: fixed;
+	bottom: 20px;
+	left: 50%;
+	transform: translateX(-50%);
+	background-color: rgba(0, 0, 0, 0.8);
+	color: white;
+	padding: 10px 20px;
+	border-radius: 5px;
+	font-size: 16px;
+	display: none;
+}

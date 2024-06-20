@@ -167,12 +167,22 @@ document.addEventListener("DOMContentLoaded", () => {
 		const textToCopy = tokenDisplay.textContent;
 		copyTextToClipboard(textToCopy)
 			.then(() => {
-				alert("Token copied to clipboard!");
+				showToast("Token copied successfully!");
 			})
 			.catch((err) => {
 				console.error("Error copying token:", err);
 			});
 	});
+
+	function showToast(message) {
+		const toast = document.getElementById("toast");
+		toast.textContent = message;
+		toast.style.display = "block";
+
+		setTimeout(() => {
+			toast.style.display = "none";
+		}, 2000);
+	}
 
 	usernameInput.addEventListener("keydown", (e) => {
 		if (e.key === "Enter") {
