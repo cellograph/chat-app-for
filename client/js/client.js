@@ -60,14 +60,30 @@ async function copyTextToClipboard(textToCopy) {
 }
 
 /**
+ * Function to calculate text color based on background color for better visibility.
+ * @param {string} backgroundColor - The background color in hexadecimal format.
+ * @returns {string} - The calculated text color (either black or white).
+ */
+function getTextColor(backgroundColor) {
+	const r = parseInt(backgroundColor.slice(1, 3), 16);
+	const g = parseInt(backgroundColor.slice(3, 5), 16);
+	const b = parseInt(backgroundColor.slice(5, 7), 16);
+	const luminosity = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+	return luminosity > 128 ? "#000000" : "#FFFFFF";
+}
+
+/**
  * Function to generate a random color for a user based on their username.
  * @param {string} username - The username of the user.
- * @returns {string} - The generated color in hexadecimal format.
+ * @returns {object} - The generated colors for background and text.
  */
 function getColorForUser(username) {
 	if (!userColors[username]) {
-		const randomColor = `#${Math.floor(Math.random() * 16777215).toString(16)}`;
-		userColors[username] = randomColor;
+		const randomColor = `#${Math.floor(Math.random() * 16777215)
+			.toString(16)
+			.padStart(6, "0")}`;
+		const textColor = getTextColor(randomColor);
+		userColors[username] = { background: randomColor, text: textColor };
 	}
 	return userColors[username];
 }
@@ -124,20 +140,22 @@ function connectToChat(token, username) {
 		const li = document.createElement("li");
 		li.textContent = `${msg}`;
 
-		const small = document.createElement("small");
-		small.textContent = new Date(timestamp).toLocaleString();
+		const smallTimeDate = document.createElement("small");
+		smallTimeDate.textContent = new Date(timestamp).toLocaleString();
 		const smallName = document.createElement("small");
 		smallName.textContent = senderUsername;
 
-		smallName.style.fontSize = "0.5rem";
+		smallName.style.fontSize = "0.7rem";
 		smallName.style.color = "#999";
-		small.style.fontSize = "0.5rem";
-		small.style.color = "#999";
+		smallTimeDate.style.fontSize = "0.5rem";
+		smallTimeDate.style.color = "#999";
 
-		li.style.backgroundColor = getColorForUser(senderUsername);
+		const colors = getColorForUser(senderUsername);
+		li.style.backgroundColor = colors.background;
+		li.style.color = colors.text;
 
 		li.appendChild(smallName);
-		li.appendChild(small);
+		li.appendChild(smallTimeDate);
 
 		if (senderUsername === currentUsername) {
 			li.classList.add("own-message");
