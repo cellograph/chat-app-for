@@ -91,9 +91,9 @@ body {
 }
 
 #messages > li {
-	padding: 8px 12px;
+	padding: 8px;
 	border-radius: 8px;
-	margin-bottom: 10px;
+	margin-bottom: 8px;
 	max-width: 80%;
 	word-wrap: break-word;
 }
@@ -280,8 +280,7 @@ button[type="submit"]:hover,
 
 @media (max-width: 600px) {
 	#chat {
-		height: 65%;
-		width: 75%;
+		margin-bottom: auto;
 	}
 }
 
