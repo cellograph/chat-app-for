@@ -184,8 +184,7 @@ button[type="submit"]:hover,
 #sharing {
 	font-size: 16px;
 	color: #fff;
-	background-color: #28a745;
-	border: 1px solid #1c7430;
+	background-color: #3f81af97;
 	padding: 10px;
 	text-align: center;
 	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
