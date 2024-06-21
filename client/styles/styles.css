@@ -280,9 +280,9 @@ button[type="submit"]:hover,
 
 @media (max-width: 600px) {
 	#chat {
-		margin-bottom: 10vh;
+		margin: 0;
 		width: 100vh;
-		height: 75vh;
+		height: 100vh;
 	}
 }
 
