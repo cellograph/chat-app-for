@@ -278,10 +278,13 @@ button[type="submit"]:hover,
 	display: none;
 }
 
-/* @media (max-width: 600px) {
+@media (max-width: 600px) {
 	#chat {
+		margin-bottom: 5%;
+		width: 100%;
+		height: 75%;
 	}
-} */
+}
 
 #exit-chat {
 	background-color: #ff4c4c;
