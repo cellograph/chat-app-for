@@ -279,3 +279,10 @@ button[type="submit"]:hover,
 #exit-chat:hover {
 	background-color: #ff1c1c;
 }
+
+footer {
+	position: fixed;
+	bottom: 5px;
+	text-align: center;
+	width: 100%;
+}
