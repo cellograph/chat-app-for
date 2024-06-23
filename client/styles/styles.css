@@ -261,10 +261,11 @@ button[type="submit"]:hover,
 	}
 	#chat {
 		width: 90%;
-		max-width: 450px;
-		height: 85vh;
+		max-width: 400px;
+		height: 60vh;
 		margin: auto;
-		position: relative;
+		margin-top: 10vh;
+		margin-bottom: 10vh;
 	}
 }
 
