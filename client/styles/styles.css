@@ -245,10 +245,10 @@ button[type="submit"]:hover,
 }
 #toast {
 	position: fixed;
-	bottom: 20px;
+	bottom: 25px;
 	left: 50%;
 	transform: translateX(-50%);
-	background-color: rgba(0, 0, 0, 0.8);
+	background-color: rgba(0, 0, 0, 0.465);
 	color: white;
 	padding: 10px 20px;
 	border-radius: 5px;
@@ -257,11 +257,14 @@ button[type="submit"]:hover,
 }
 @media (max-width: 600px) {
 	body {
-		padding: 36px;
+		padding: 0;
 	}
 	#chat {
-		margin-top: auto;
-		margin-bottom: auto;
+		width: 90%;
+		max-width: 450px;
+		height: 85vh;
+		margin: auto;
+		position: relative;
 	}
 }
 
