@@ -1,15 +1,18 @@
-import { createClient } from "@libsql/client";
+import sqlite3 from "sqlite3";
+import { open } from "sqlite";
 import dotenv from "dotenv";
 
 dotenv.config();
 
-const db = createClient({
-	url: process.env.DATABASE_URL,
-	authToken: process.env.DATABASE_AUTH_TOKEN,
-});
+let db;
 
 export const initializeDB = async () => {
-	await db.execute(`
+  db = await open({
+    filename: "./database.sqlite",
+    driver: sqlite3.Database,
+  });
+
+  await db.exec(`
     CREATE TABLE IF NOT EXISTS messages (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       token TEXT,
@@ -19,7 +22,7 @@ export const initializeDB = async () => {
     )
   `);
 
-	await db.execute(`
+  await db.exec(`
     CREATE TABLE IF NOT EXISTS tokens (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       token TEXT UNIQUE,
@@ -28,4 +31,27 @@ export const initializeDB = async () => {
   `);
 };
 
-export const dbClient = db;
+export const dbClient = {
+  run: async (...params) => {
+    // console.log({ sql });
+    const data = await db.run(...params);
+
+    console.log(data);
+    return data;
+  },
+  execute: async (sql) => {
+    // console.log({ sql });
+    const data = await db.run(sql.sql);
+
+    console.log(data);
+    return data;
+  },
+  query: async (sql, params) => {
+    console.log(2, sql);
+    return await db.all(sql.sql, sql.args[0]);
+  },
+  get: async (sql, params) => {
+    console.log(3, sql);
+    return await db.get(sql, params);
+  },
+};
